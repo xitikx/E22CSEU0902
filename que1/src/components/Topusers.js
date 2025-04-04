@@ -8,59 +8,107 @@ const TopUsers = () => {
   const styles = {
     container: {
       backgroundColor: '#ffffff',
-      padding: '2rem',
-      borderRadius: '12px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      padding: '2.5rem',
+      borderRadius: '16px',
+      boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
       width: '90%',
-      maxWidth: '600px',
-      margin: '0 auto',
+      maxWidth: '700px',
+      margin: '2rem auto',
+      position: 'relative',
+      overflow: 'hidden',
     },
     title: {
-      fontSize: '2rem',
-      fontWeight: '700',
-      marginBottom: '1.5rem',
-      color: '#333',
+      fontSize: '2.25rem',
+      fontWeight: '800',
+      marginBottom: '2rem',
+      color: '#1a1a1a',
       textAlign: 'center',
-      background: 'linear-gradient(90deg, #007bff, #00c4ff)',
+      background: 'linear-gradient(90deg, #4f46e5, #06b6d4)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
+      position: 'relative',
+      paddingBottom: '0.5rem',
+    },
+    titleUnderline: {
+      position: 'absolute',
+      bottom: 0,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '100px',
+      height: '3px',
+      background: 'linear-gradient(90deg, #4f46e5, #06b6d4)',
+      borderRadius: '2px',
     },
     userCard: {
       display: 'flex',
       alignItems: 'center',
       gap: '1.5rem',
-      padding: '1rem',
-      backgroundColor: '#f9fafb',
-      borderRadius: '8px',
-      marginBottom: '1rem',
-      borderLeft: '4px solid #007bff',
-      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      padding: '1.25rem',
+      backgroundColor: '#ffffff',
+      borderRadius: '12px',
+      marginBottom: '1.25rem',
+      border: '1px solid #f1f5f9',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+      ':hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+        borderColor: '#4f46e5',
+      }
+    },
+    rankBadge: {
+      width: '32px',
+      height: '32px',
+      borderRadius: '50%',
+      background: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
+      color: '#ffffff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: '600',
+      fontSize: '1rem',
+      flexShrink: 0,
     },
     image: {
       borderRadius: '50%',
-      width: '60px',
-      height: '60px',
-      border: '2px solid #007bff',
-      padding: '2px',
+      width: '64px',
+      height: '64px',
+      border: '3px solid transparent',
+      background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #4f46e5, #06b6d4) border-box',
       flexShrink: 0,
+      transition: 'transform 0.3s ease',
     },
     userInfo: {
       flex: 1,
+      position: 'relative',
     },
     userName: {
       fontWeight: '700',
-      fontSize: '1.2rem',
-      color: '#1a1a1a',
+      fontSize: '1.25rem',
+      color: '#1e293b',
+      marginBottom: '0.25rem',
+      transition: 'color 0.3s ease',
     },
     postCount: {
-      color: '#666',
-      fontSize: '0.95rem',
+      color: '#64748b',
+      fontSize: '1rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+    },
+    postIcon: {
+      width: '16px',
+      height: '16px',
+      borderRadius: '4px',
+      background: '#e2e8f0',
+      display: 'inline-block',
     },
     loading: {
       textAlign: 'center',
-      padding: '2rem',
-      fontSize: '1.2rem',
-      color: '#007bff',
+      padding: '3rem',
+      fontSize: '1.5rem',
+      color: '#4f46e5',
+      animation: 'pulse 1.5s infinite',
     }
   };
 
@@ -92,14 +140,49 @@ const TopUsers = () => {
     fetchTopUsers();
   }, []);
 
-  if (loading) return <div style={styles.loading}>Loading...</div>;
+  if (loading) return (
+    <div style={styles.loading}>
+      Loading Top Users...
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
+    </div>
+  );
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Top 5 Users by Post Count</h2>
+      <h2 style={styles.title}>
+        Top 5 Users by Post Count
+        <div style={styles.titleUnderline}></div>
+      </h2>
       <div>
-        {topUsers.map((user) => (
-          <div key={user.id} style={styles.userCard}>
+        {topUsers.map((user, index) => (
+          <div 
+            key={user.id} 
+            style={{
+              ...styles.userCard,
+              ':hover': {
+                ...styles.userCard[':hover'],
+              }
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+              e.currentTarget.style.borderColor = '#4f46e5';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = '#f1f5f9';
+            }}
+          >
+            <div style={styles.rankBadge}>{index + 1}</div>
             <img 
               src={`https://picsum.photos/50?random=${user.id}`} 
               alt={user.name} 
@@ -107,7 +190,10 @@ const TopUsers = () => {
             />
             <div style={styles.userInfo}>
               <h3 style={styles.userName}>{user.name}</h3>
-              <p style={styles.postCount}>Posts: {user.postCount}</p>
+              <p style={styles.postCount}>
+                <span style={styles.postIcon}></span>
+                {user.postCount} Posts
+              </p>
             </div>
           </div>
         ))}

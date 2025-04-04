@@ -1,119 +1,241 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, getUserPosts } from '../api';
 
-const TopUsers = () => {
-  const [topUsers, setTopUsers] = useState([]);
+const Feed = () => {
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const styles = {
     container: {
       backgroundColor: '#ffffff',
-      padding: '2rem',
-      borderRadius: '12px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      padding: '2.5rem',
+      borderRadius: '16px',
+      boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
       width: '90%',
-      maxWidth: '600px',
-      margin: '0 auto',
+      maxWidth: '900px',
+      margin: '2rem auto',
+      position: 'relative',
+      overflow: 'hidden',
+      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
     },
     title: {
-      fontSize: '2rem',
-      fontWeight: '700',
-      marginBottom: '1.5rem',
-      color: '#333',
+      fontSize: '2.5rem',
+      fontWeight: '800',
+      marginBottom: '2rem',
+      color: '#1e293b',
       textAlign: 'center',
-      background: 'linear-gradient(90deg, #007bff, #00c4ff)',
+      background: 'linear-gradient(90deg, #10b981, #34d399)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
+      position: 'relative',
+      letterSpacing: '0.5px',
     },
-    userCard: {
+    titleUnderline: {
+      position: 'absolute',
+      bottom: '-8px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '120px',
+      height: '4px',
+      background: 'linear-gradient(90deg, #10b981, #34d399)',
+      borderRadius: '2px',
+    },
+    postCard: {
+      padding: '1.75rem',
+      backgroundColor: '#ffffff',
+      borderRadius: '12px',
+      marginBottom: '1.5rem',
+      border: '1px solid #f1f5f9',
+      transition: 'all 0.3s ease',
       display: 'flex',
-      alignItems: 'center',
-      gap: '1.5rem',
-      padding: '1rem',
-      backgroundColor: '#f9fafb',
-      borderRadius: '8px',
-      marginBottom: '1rem',
-      borderLeft: '4px solid #007bff',
-      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      flexDirection: 'column',
+      gap: '1.25rem',
+      position: 'relative',
+      overflow: 'hidden',
+      ':hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+        borderColor: '#10b981',
+      }
+    },
+    newPostIndicator: {
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      width: '10px',
+      height: '10px',
+      borderRadius: '50%',
+      background: '#10b981',
+      animation: 'pulse 2s infinite',
     },
     image: {
-      borderRadius: '50%',
-      width: '60px',
-      height: '60px',
-      border: '2px solid #007bff',
-      padding: '2px',
-      flexShrink: 0,
+      width: '100%',
+      maxWidth: '350px',
+      height: 'auto',
+      borderRadius: '10px',
+      border: 'none',
+      alignSelf: 'center',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+      transition: 'transform 0.3s ease',
+    },
+    contentWrapper: {
+      padding: '0.5rem',
+      background: 'rgba(248, 250, 252, 0.8)',
+      borderRadius: '8px',
+      position: 'relative',
+    },
+    content: {
+      fontWeight: '600',
+      fontSize: '1.15rem',
+      color: '#1e293b',
+      marginBottom: '0.5rem',
+      lineHeight: '1.6',
+      wordBreak: 'break-word',
     },
     userInfo: {
-      flex: 1,
+      color: '#64748b',
+      fontSize: '1rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      background: '#f1f5f9',
+      padding: '0.25rem 0.75rem',
+      borderRadius: '6px',
+      width: 'fit-content',
     },
-    userName: {
-      fontWeight: '700',
-      fontSize: '1.2rem',
-      color: '#1a1a1a',
-    },
-    postCount: {
-      color: '#666',
-      fontSize: '0.95rem',
+    userIcon: {
+      width: '16px',
+      height: '16px',
+      borderRadius: '50%',
+      background: '#10b981',
+      display: 'inline-block',
     },
     loading: {
       textAlign: 'center',
-      padding: '2rem',
-      fontSize: '1.2rem',
-      color: '#007bff',
+      padding: '3rem',
+      fontSize: '1.6rem',
+      color: '#10b981',
+      animation: 'pulse 1.5s infinite',
+      fontWeight: '500',
     }
   };
 
   useEffect(() => {
-    const fetchTopUsers = async () => {
+    const fetchInitialPosts = async () => {
       try {
         const usersResponse = await getUsers();
-        const users = Object.entries(usersResponse.data.users).map(([id, name]) => ({
-          id,
-          name,
-          postCount: 0
-        }));
+        const users = Object.entries(usersResponse.data.users);
 
-        const userPostPromises = users.map(async (user) => {
-          const postsResponse = await getUserPosts(user.id);
-          return { ...user, postCount: postsResponse.data.posts.length };
-        });
+        let allPosts = [];
+        for (const [userId] of users) {
+          const postsResponse = await getUserPosts(userId);
+          allPosts = allPosts.concat(postsResponse.data.posts);
+        }
 
-        const usersWithPosts = await Promise.all(userPostPromises);
-        const sortedUsers = usersWithPosts.sort((a, b) => b.postCount - a.postCount);
-        setTopUsers(sortedUsers.slice(0, 5));
+        setPosts(allPosts.sort((a, b) => b.id - a.id));
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching top users:', error);
+        console.error('Error fetching posts:', error);
         setLoading(false);
       }
     };
 
-    fetchTopUsers();
+    fetchInitialPosts();
+
+    const interval = setInterval(async () => {
+      try {
+        const usersResponse = await getUsers();
+        const users = Object.entries(usersResponse.data.users);
+        let latestPosts = [];
+        
+        for (const [userId] of users) {
+          const postsResponse = await getUserPosts(userId);
+          latestPosts = latestPosts.concat(postsResponse.data.posts);
+        }
+
+        setPosts(prevPosts => {
+          const updatedPosts = [...latestPosts, ...prevPosts];
+          return updatedPosts.sort((a, b) => b.id - a.id);
+        });
+      } catch (error) {
+        console.error('Error polling posts:', error);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  if (loading) return <div style={styles.loading}>Loading...</div>;
+  if (loading) return (
+    <div style={styles.loading}>
+      Loading Feed...
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
+    </div>
+  );
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Top 5 Users by Post Count</h2>
+      <h2 style={styles.title}>
+        Live Feed
+        <div style={styles.titleUnderline}></div>
+      </h2>
       <div>
-        {topUsers.map((user) => (
-          <div key={user.id} style={styles.userCard}>
+        {posts.map((post, index) => (
+          <div 
+            key={post.id} 
+            style={{
+              ...styles.postCard,
+              ':hover': {
+                ...styles.postCard[':hover'],
+              }
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+              e.currentTarget.style.borderColor = '#10b981';
+              e.currentTarget.querySelector('img').style.transform = 'scale(1.02)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = '#f1f5f9';
+              e.currentTarget.querySelector('img').style.transform = 'none';
+            }}
+          >
+            {index < 5 && <div style={styles.newPostIndicator}></div>}
             <img 
-              src={`https://picsum.photos/50?random=${user.id}`} 
-              alt={user.name} 
+              src={`https://picsum.photos/200?random=${post.id}`} 
+              alt="Post" 
               style={styles.image}
             />
-            <div style={styles.userInfo}>
-              <h3 style={styles.userName}>{user.name}</h3>
-              <p style={styles.postCount}>Posts: {user.postCount}</p>
+            <div style={styles.contentWrapper}>
+              <p style={styles.content}>{post.content}</p>
+              <p style={styles.userInfo}>
+                <span style={styles.userIcon}></span>
+                User #{post.userid}
+              </p>
             </div>
           </div>
         ))}
       </div>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
     </div>
   );
 };
 
-export default TopUsers;
+export default Feed;
